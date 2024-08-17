@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useReducer, useRef, useState } from "react";
+import { MouseEvent, useEffect, useReducer, useRef } from "react";
 import { floodFill, getPixelColor, hexToRgba } from "./utils.ts";
 import { Mode } from "./types.ts";
 import drawingReducer from "./reducer.ts";
