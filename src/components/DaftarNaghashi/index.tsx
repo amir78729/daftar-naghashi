@@ -1,3 +1,3 @@
-import DaftarNaghashi from './DaftarNaghashi';
+import DaftarNaghashi from "./DaftarNaghashi";
 
 export default DaftarNaghashi;
