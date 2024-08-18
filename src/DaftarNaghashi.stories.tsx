@@ -1,18 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import DaftarNaghashi from "./DaftarNaghashi";
+import DaftarNaghashiComponent from ".";
 
 const meta = {
   title: "DaftarNaghashi",
-  component: DaftarNaghashi,
-} satisfies Meta<typeof DaftarNaghashi>;
+  component: DaftarNaghashiComponent,
+} satisfies Meta<typeof DaftarNaghashiComponent>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const DaftarNaghashi: Story = {};
 
-Default.args = {
+DaftarNaghashi.args = {
   onDrawing: () => console.log("onDrawing"),
   onStartDrawing: (c) => {
     console.log("onStartDrawing");
