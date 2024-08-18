@@ -1,1 +1,3 @@
-export * from './DaftarNaghashi';
+import DaftarNaghashi from "./DaftarNaghashi.tsx";
+
+export default DaftarNaghashi;

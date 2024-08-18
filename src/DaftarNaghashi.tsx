@@ -6,6 +6,7 @@ import drawingReducer from "./reducer.ts";
 type Props = {
   height?: number;
   width?: number;
+  readonly?: boolean;
   onStartDrawing?: (c: HTMLCanvasElement | null) => void;
   onDrawing?: (c: HTMLCanvasElement | null) => void;
   onStopDrawing?: (c: HTMLCanvasElement | null) => void;
@@ -17,6 +18,7 @@ const DrawingComponent = ({
   onStopDrawing,
   height = 500,
   width = 500,
+  readonly,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -58,7 +60,7 @@ const DrawingComponent = ({
   }, [strokeColor, lineWidth]);
 
   const startDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
-    if (!ctxRef.current) return;
+    if (!ctxRef.current || readonly) return;
     const { offsetX, offsetY } = e.nativeEvent;
     ctxRef.current.beginPath();
     ctxRef.current.moveTo(offsetX, offsetY);
@@ -67,7 +69,7 @@ const DrawingComponent = ({
   };
 
   const draw = (e: MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !ctxRef.current) return;
+    if (!isDrawing || !ctxRef.current || readonly) return;
 
     const { offsetX, offsetY } = e.nativeEvent;
     ctxRef.current.lineTo(offsetX, offsetY);
@@ -76,6 +78,7 @@ const DrawingComponent = ({
   };
 
   const stopDrawing = () => {
+    if (readonly) return
     if (isDrawing) {
       ctxRef.current?.closePath();
       dispatch({ type: "STOP_DRAWING" });
@@ -85,6 +88,7 @@ const DrawingComponent = ({
   };
 
   const saveHistory = () => {
+    if (readonly) return
     if (canvasRef.current) {
       dispatch({
         type: "SAVE_HISTORY",
@@ -94,6 +98,7 @@ const DrawingComponent = ({
   };
 
   const undo = () => {
+    if (readonly) return
     dispatch({ type: "UNDO" });
     if (ctxRef.current && canvasRef.current && history.length > 1) {
       const previousState = history[history.length - 2];
@@ -112,6 +117,7 @@ const DrawingComponent = ({
   };
 
   const clearCanvas = () => {
+    if (readonly) return
     if (ctxRef.current && canvasRef.current) {
       ctxRef.current.clearRect(
         0,
@@ -124,6 +130,7 @@ const DrawingComponent = ({
   };
 
   const handleModeChange = () => {
+    if (readonly) return
     dispatch({
       type: "SET_MODE",
       payload: mode === Mode.PEN ? Mode.FILL : Mode.PEN,
@@ -131,6 +138,7 @@ const DrawingComponent = ({
   };
 
   const handleCanvasClick = (e: MouseEvent<HTMLCanvasElement>) => {
+    if (readonly) return
     if (mode === Mode.FILL && canvasRef.current && ctxRef.current) {
       const { offsetX, offsetY } = e.nativeEvent;
       const imageData = ctxRef.current.getImageData(
@@ -157,7 +165,7 @@ const DrawingComponent = ({
       <div style={{ marginBottom: "10px" }}>
         <label>
           Color:
-          <input
+          <input disabled={readonly}
             type="color"
             value={strokeColor}
             onChange={(e) =>
@@ -167,7 +175,7 @@ const DrawingComponent = ({
         </label>
         <label>
           Thickness:
-          <input
+          <input disabled={readonly}
             type="number"
             value={lineWidth}
             min="1"
@@ -180,9 +188,9 @@ const DrawingComponent = ({
             }
           />
         </label>
-        <button onClick={undo}>Undo</button>
-        <button onClick={clearCanvas}>Clear</button>
-        <button onClick={handleModeChange}>
+        <button disabled={readonly} onClick={undo}>Undo</button>
+        <button disabled={readonly} onClick={clearCanvas}>Clear</button>
+        <button disabled={readonly} onClick={handleModeChange}>
           Switch to {mode === Mode.PEN ? "Fill" : "Pen"} Mode
         </button>
       </div>
