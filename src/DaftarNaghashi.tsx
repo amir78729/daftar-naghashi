@@ -2,6 +2,7 @@ import React, { MouseEvent, useEffect, useReducer, useRef } from "react";
 import { floodFill, getPixelColor, hexToRgba } from "./utils.ts";
 import { Mode, ToolbarProps } from "./types.ts";
 import drawingReducer from "./reducer.ts";
+import {useHotkeys} from "react-hotkeys-hook";
 
 type Props = {
   height?: number;
@@ -44,16 +45,16 @@ const renderDefaultToolbar = ({
         onChange={(e) => setLineWidth(parseInt(e.target.value, 10))}
       />
     </label>
-    <button disabled={readonly} onClick={undo}>
+    <button title="shortcut: u" disabled={readonly} onClick={undo}>
       Undo
     </button>
-    <button disabled={readonly} onClick={clear}>
+    <button title="shortcut: c" disabled={readonly} onClick={clear}>
       Clear
     </button>
-    <button disabled={readonly} onClick={() => setMode("pen")}>
+    <button title="shortcut: p or b" disabled={readonly} onClick={() => setMode("pen")}>
       Switch to Pen Mode
     </button>
-    <button disabled={readonly} onClick={() => setMode("fill")}>
+    <button title="shortcut: f" disabled={readonly} onClick={() => setMode("fill")}>
       Switch to Fill Mode
     </button>
   </div>
@@ -147,6 +148,7 @@ const DrawingComponent = ({
     }
   };
 
+
   const undo = () => {
     if (readonly) return;
     dispatch({ type: "UNDO" });
@@ -165,6 +167,7 @@ const DrawingComponent = ({
       };
     }
   };
+  useHotkeys('u', undo)
 
   const clear = () => {
     if (readonly) return;
@@ -178,6 +181,7 @@ const DrawingComponent = ({
       dispatch({ type: "CLEAR_CANVAS" });
     }
   };
+  useHotkeys('c', clear)
 
   const setMode = (m: Mode) => {
     if (readonly) return;
@@ -186,6 +190,9 @@ const DrawingComponent = ({
       payload: m,
     });
   };
+  useHotkeys('b', () => setMode('pen'))
+  useHotkeys('p', () => setMode('pen'))
+  useHotkeys('f', () => setMode('fill'))
 
   const handleCanvasClick = (e: MouseEvent<HTMLCanvasElement>) => {
     if (readonly) return;
