@@ -1,6 +1,5 @@
 {
   "name": "daftar-naghashi",
-  "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -12,7 +11,8 @@
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-hotkeys-hook": "^4.5.0"
   },
   "peerDependencies": {
     "react": ">=16.8.0",

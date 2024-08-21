@@ -1,16 +1,64 @@
-import { MouseEvent, useEffect, useReducer, useRef } from "react";
+import React, { MouseEvent, useEffect, useReducer, useRef } from "react";
 import { floodFill, getPixelColor, hexToRgba } from "./utils.ts";
-import { Mode } from "./types.ts";
+import { Mode, ToolbarProps } from "./types.ts";
 import drawingReducer from "./reducer.ts";
+import {useHotkeys} from "react-hotkeys-hook";
 
 type Props = {
   height?: number;
   width?: number;
-  readonly?: boolean;
+  readonly: boolean;
   onStartDrawing?: (c: HTMLCanvasElement | null) => void;
   onDrawing?: (c: HTMLCanvasElement | null) => void;
   onStopDrawing?: (c: HTMLCanvasElement | null) => void;
+  renderToolbar?: (props: ToolbarProps) => React.ReactNode;
 };
+
+const renderDefaultToolbar = ({
+  setLineWidth,
+  thickness,
+  setColor,
+  color,
+  undo,
+  clear,
+  setMode,
+  readonly,
+}: ToolbarProps) => (
+  <div style={{ marginBottom: "10px" }}>
+    <label>
+      Color:
+      <input
+        disabled={readonly}
+        type="color"
+        value={color}
+        onChange={(e) => setColor(e.target.value)}
+      />
+    </label>
+    <label>
+      Thickness:
+      <input
+        disabled={readonly}
+        type="number"
+        value={thickness}
+        min="1"
+        max="100"
+        onChange={(e) => setLineWidth(parseInt(e.target.value, 10))}
+      />
+    </label>
+    <button title="shortcut: u" disabled={readonly} onClick={undo}>
+      Undo
+    </button>
+    <button title="shortcut: c" disabled={readonly} onClick={clear}>
+      Clear
+    </button>
+    <button title="shortcut: p or b" disabled={readonly} onClick={() => setMode("pen")}>
+      Switch to Pen Mode
+    </button>
+    <button title="shortcut: f" disabled={readonly} onClick={() => setMode("fill")}>
+      Switch to Fill Mode
+    </button>
+  </div>
+);
 
 const DrawingComponent = ({
   onStartDrawing,
@@ -18,20 +66,23 @@ const DrawingComponent = ({
   onStopDrawing,
   height = 500,
   width = 500,
-  readonly,
+  readonly = false,
+  renderToolbar = renderDefaultToolbar,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
   // Initialize reducer state and dispatch function
-  const [{ isDrawing, strokeColor, lineWidth, history, mode }, dispatch] =
-    useReducer(drawingReducer, {
+  const [{ isDrawing, color, thickness, history, mode }, dispatch] = useReducer(
+    drawingReducer,
+    {
       isDrawing: false,
-      strokeColor: "#000000",
-      lineWidth: 5,
+      color: "#000000",
+      thickness: 5,
       history: [],
-      mode: Mode.PEN,
-    });
+      mode: "pen",
+    },
+  );
 
   const initCanvas = () => {
     if (canvasRef.current) {
@@ -41,8 +92,8 @@ const DrawingComponent = ({
       const ctx = canvas.getContext("2d");
       if (ctx) {
         ctx.lineCap = "round";
-        ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = thickness;
         ctxRef.current = ctx;
       }
     }
@@ -54,10 +105,10 @@ const DrawingComponent = ({
 
   useEffect(() => {
     if (ctxRef.current) {
-      ctxRef.current.strokeStyle = strokeColor;
-      ctxRef.current.lineWidth = lineWidth;
+      ctxRef.current.strokeStyle = color;
+      ctxRef.current.lineWidth = thickness;
     }
-  }, [strokeColor, lineWidth]);
+  }, [color, thickness]);
 
   const startDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
     if (!ctxRef.current || readonly) return;
@@ -97,6 +148,7 @@ const DrawingComponent = ({
     }
   };
 
+
   const undo = () => {
     if (readonly) return;
     dispatch({ type: "UNDO" });
@@ -115,8 +167,9 @@ const DrawingComponent = ({
       };
     }
   };
+  useHotkeys('u', undo)
 
-  const clearCanvas = () => {
+  const clear = () => {
     if (readonly) return;
     if (ctxRef.current && canvasRef.current) {
       ctxRef.current.clearRect(
@@ -128,18 +181,22 @@ const DrawingComponent = ({
       dispatch({ type: "CLEAR_CANVAS" });
     }
   };
+  useHotkeys('c', clear)
 
-  const handleModeChange = () => {
+  const setMode = (m: Mode) => {
     if (readonly) return;
     dispatch({
       type: "SET_MODE",
-      payload: mode === Mode.PEN ? Mode.FILL : Mode.PEN,
+      payload: m,
     });
   };
+  useHotkeys('b', () => setMode('pen'))
+  useHotkeys('p', () => setMode('pen'))
+  useHotkeys('f', () => setMode('fill'))
 
   const handleCanvasClick = (e: MouseEvent<HTMLCanvasElement>) => {
     if (readonly) return;
-    if (mode === Mode.FILL && canvasRef.current && ctxRef.current) {
+    if (mode === "fill" && canvasRef.current && ctxRef.current) {
       const { offsetX, offsetY } = e.nativeEvent;
       const imageData = ctxRef.current.getImageData(
         0,
@@ -148,68 +205,52 @@ const DrawingComponent = ({
         canvasRef.current.height,
       );
       const targetColor = getPixelColor(imageData, offsetX, offsetY);
-      floodFill(
-        imageData,
-        offsetX,
-        offsetY,
-        targetColor,
-        hexToRgba(strokeColor),
-      );
+      floodFill(imageData, offsetX, offsetY, targetColor, hexToRgba(color));
       ctxRef.current.putImageData(imageData, 0, 0);
       saveHistory();
     }
   };
 
+  const setLineWidth = (value: number) => {
+    if (readonly) return;
+    dispatch({
+      type: "SET_THICKNESS",
+      payload: value,
+    });
+  };
+
+  const setColor = (value: string) => {
+    if (readonly) return;
+    dispatch({
+      type: "SET_COLOR",
+      payload: value,
+    });
+  };
+
   return (
     <div>
-      <div style={{ marginBottom: "10px" }}>
-        <label>
-          Color:
-          <input
-            disabled={readonly}
-            type="color"
-            value={strokeColor}
-            onChange={(e) =>
-              dispatch({ type: "SET_COLOR", payload: e.target.value })
-            }
-          />
-        </label>
-        <label>
-          Thickness:
-          <input
-            disabled={readonly}
-            type="number"
-            value={lineWidth}
-            min="1"
-            max="100"
-            onChange={(e) =>
-              dispatch({
-                type: "SET_LINE_WIDTH",
-                payload: parseInt(e.target.value),
-              })
-            }
-          />
-        </label>
-        <button disabled={readonly} onClick={undo}>
-          Undo
-        </button>
-        <button disabled={readonly} onClick={clearCanvas}>
-          Clear
-        </button>
-        <button disabled={readonly} onClick={handleModeChange}>
-          Switch to {mode === Mode.PEN ? "Fill" : "Pen"} Mode
-        </button>
-      </div>
+      {!readonly &&
+        renderToolbar({
+          readonly,
+          setLineWidth,
+          thickness: thickness,
+          setColor,
+          color,
+          undo,
+          clear,
+          setMode,
+          mode,
+        })}
       <canvas
         ref={canvasRef}
-        onMouseDown={mode === Mode.PEN ? startDrawing : undefined}
-        onMouseMove={mode === Mode.PEN ? draw : undefined}
-        onMouseUp={mode === Mode.PEN ? stopDrawing : undefined}
-        onMouseLeave={mode === Mode.PEN ? stopDrawing : undefined}
-        onClick={mode === Mode.FILL ? handleCanvasClick : undefined}
+        onMouseDown={mode === "pen" ? startDrawing : undefined}
+        onMouseMove={mode === "pen" ? draw : undefined}
+        onMouseUp={mode === "pen" ? stopDrawing : undefined}
+        onMouseLeave={mode === "pen" ? stopDrawing : undefined}
+        onClick={mode === "fill" ? handleCanvasClick : undefined}
         style={{
           border: "1px solid black",
-          cursor: mode === Mode.PEN ? "crosshair" : "pointer",
+          cursor: mode === "pen" ? "crosshair" : "pointer",
         }}
       />
     </div>
