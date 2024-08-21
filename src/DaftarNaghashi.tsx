@@ -1,5 +1,5 @@
 import React, { MouseEvent, useEffect, useReducer, useRef } from "react";
-import { floodFill, getPixelColor, hexToRgba } from "./utils.ts";
+import {floodFill, getPixelColor, hexToRgba} from "./utils.ts";
 import { Mode, ToolbarProps } from "./types.ts";
 import drawingReducer from "./reducer.ts";
 import {useHotkeys} from "react-hotkeys-hook";
@@ -12,6 +12,7 @@ type Props = {
   onDrawing?: (c: HTMLCanvasElement | null) => void;
   onStopDrawing?: (c: HTMLCanvasElement | null) => void;
   renderToolbar?: (props: ToolbarProps) => React.ReactNode;
+  value?: string;
 };
 
 const renderDefaultToolbar = ({
@@ -68,6 +69,7 @@ const DrawingComponent = ({
   width = 500,
   readonly = false,
   renderToolbar = renderDefaultToolbar,
+                        value,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -95,6 +97,14 @@ const DrawingComponent = ({
         ctx.strokeStyle = color;
         ctx.lineWidth = thickness;
         ctxRef.current = ctx;
+        if (value) {
+          const img = new Image();
+          img.src = value;
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            dispatch({ type: "SAVE_HISTORY", payload: value });
+          };
+        }
       }
     }
   };
