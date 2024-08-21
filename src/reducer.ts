@@ -2,8 +2,8 @@ import { Mode } from "./types.ts";
 
 interface DrawingState {
   isDrawing: boolean;
-  strokeColor: string;
-  lineWidth: number;
+  color: string;
+  thickness: number;
   history: string[];
   mode: Mode;
 }
@@ -12,7 +12,7 @@ type DrawingAction =
   | { type: "START_DRAWING" }
   | { type: "STOP_DRAWING" }
   | { type: "SET_COLOR"; payload: string }
-  | { type: "SET_LINE_WIDTH"; payload: number }
+  | { type: "SET_THICKNESS"; payload: number }
   | { type: "SAVE_HISTORY"; payload: string }
   | { type: "UNDO" }
   | { type: "CLEAR_CANVAS" }
@@ -28,9 +28,9 @@ const drawingReducer = (
     case "STOP_DRAWING":
       return { ...state, isDrawing: false };
     case "SET_COLOR":
-      return { ...state, strokeColor: action.payload };
-    case "SET_LINE_WIDTH":
-      return { ...state, lineWidth: action.payload };
+      return { ...state, color: action.payload };
+    case "SET_THICKNESS":
+      return { ...state, thickness: action.payload };
     case "SAVE_HISTORY":
       return { ...state, history: [...state.history, action.payload] };
     case "UNDO":
