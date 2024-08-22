@@ -1,8 +1,8 @@
 import React, { MouseEvent, useEffect, useReducer, useRef } from "react";
-import {floodFill, getPixelColor, hexToRgba} from "./utils.ts";
+import { floodFill, getPixelColor, hexToRgba } from "./utils.ts";
 import { Mode, ToolbarProps } from "./types.ts";
 import drawingReducer from "./reducer.ts";
-import {useHotkeys} from "react-hotkeys-hook";
+import { useHotkeys } from "react-hotkeys-hook";
 
 type Props = {
   height?: number;
@@ -52,10 +52,18 @@ const renderDefaultToolbar = ({
     <button title="shortcut: c" disabled={viewMode} onClick={clear}>
       Clear
     </button>
-    <button title="shortcut: p or b" disabled={viewMode} onClick={() => setMode("pen")}>
+    <button
+      title="shortcut: p or b"
+      disabled={viewMode}
+      onClick={() => setMode("pen")}
+    >
       Switch to Pen Mode
     </button>
-    <button title="shortcut: f" disabled={viewMode} onClick={() => setMode("fill")}>
+    <button
+      title="shortcut: f"
+      disabled={viewMode}
+      onClick={() => setMode("fill")}
+    >
       Switch to Fill Mode
     </button>
   </div>
@@ -69,7 +77,7 @@ const DrawingComponent = ({
   width = 500,
   viewMode = false,
   renderToolbar = renderDefaultToolbar,
-                        value,
+  value,
 }: Props) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
@@ -158,7 +166,6 @@ const DrawingComponent = ({
     }
   };
 
-
   const undo = () => {
     if (viewMode) return;
     dispatch({ type: "UNDO" });
@@ -177,7 +184,7 @@ const DrawingComponent = ({
       };
     }
   };
-  useHotkeys('u', undo)
+  useHotkeys("u", undo);
 
   const clear = () => {
     if (viewMode) return;
@@ -191,7 +198,7 @@ const DrawingComponent = ({
       dispatch({ type: "CLEAR_CANVAS" });
     }
   };
-  useHotkeys('c', clear)
+  useHotkeys("c", clear);
 
   const setMode = (m: Mode) => {
     if (viewMode) return;
@@ -200,9 +207,9 @@ const DrawingComponent = ({
       payload: m,
     });
   };
-  useHotkeys('b', () => setMode('pen'))
-  useHotkeys('p', () => setMode('pen'))
-  useHotkeys('f', () => setMode('fill'))
+  useHotkeys("b", () => setMode("pen"));
+  useHotkeys("p", () => setMode("pen"));
+  useHotkeys("f", () => setMode("fill"));
 
   const handleCanvasClick = (e: MouseEvent<HTMLCanvasElement>) => {
     if (viewMode) return;

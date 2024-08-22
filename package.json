@@ -4,7 +4,11 @@
     "name": "Amirhossein Alibakhshi",
     "email": "amirhosseinalibakhshi@gmail.com"
   },
-  "keywords": ["paint", "react", "draw"],
+  "keywords": [
+    "paint",
+    "react",
+    "draw"
+  ],
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -12,10 +16,10 @@
     "clean": "rm -rf dist",
     "build:types": "tsc --declaration true --emitDeclarationOnly true --outDir dist --noEmit false",
     "build:rollup": "rollup -c",
+    "build:storybook": "storybook build",
     "lint": "eslint .",
     "format": "pnpm exec prettier . --write",
-    "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "storybook": "storybook dev -p 6006"
   },
   "dependencies": {
     "react": "^18.3.1",
