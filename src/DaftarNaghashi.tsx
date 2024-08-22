@@ -7,7 +7,7 @@ import {useHotkeys} from "react-hotkeys-hook";
 type Props = {
   height?: number;
   width?: number;
-  readonly: boolean;
+  viewMode?: boolean;
   onStartDrawing?: (c: HTMLCanvasElement | null) => void;
   onDrawing?: (c: HTMLCanvasElement | null) => void;
   onStopDrawing?: (c: HTMLCanvasElement | null) => void;
@@ -23,13 +23,13 @@ const renderDefaultToolbar = ({
   undo,
   clear,
   setMode,
-  readonly,
+  viewMode,
 }: ToolbarProps) => (
   <div style={{ marginBottom: "10px" }}>
     <label>
       Color:
       <input
-        disabled={readonly}
+        disabled={viewMode}
         type="color"
         value={color}
         onChange={(e) => setColor(e.target.value)}
@@ -38,7 +38,7 @@ const renderDefaultToolbar = ({
     <label>
       Thickness:
       <input
-        disabled={readonly}
+        disabled={viewMode}
         type="number"
         value={thickness}
         min="1"
@@ -46,16 +46,16 @@ const renderDefaultToolbar = ({
         onChange={(e) => setLineWidth(parseInt(e.target.value, 10))}
       />
     </label>
-    <button title="shortcut: u" disabled={readonly} onClick={undo}>
+    <button title="shortcut: u" disabled={viewMode} onClick={undo}>
       Undo
     </button>
-    <button title="shortcut: c" disabled={readonly} onClick={clear}>
+    <button title="shortcut: c" disabled={viewMode} onClick={clear}>
       Clear
     </button>
-    <button title="shortcut: p or b" disabled={readonly} onClick={() => setMode("pen")}>
+    <button title="shortcut: p or b" disabled={viewMode} onClick={() => setMode("pen")}>
       Switch to Pen Mode
     </button>
-    <button title="shortcut: f" disabled={readonly} onClick={() => setMode("fill")}>
+    <button title="shortcut: f" disabled={viewMode} onClick={() => setMode("fill")}>
       Switch to Fill Mode
     </button>
   </div>
@@ -67,7 +67,7 @@ const DrawingComponent = ({
   onStopDrawing,
   height = 500,
   width = 500,
-  readonly = false,
+  viewMode = false,
   renderToolbar = renderDefaultToolbar,
                         value,
 }: Props) => {
@@ -121,7 +121,7 @@ const DrawingComponent = ({
   }, [color, thickness]);
 
   const startDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
-    if (!ctxRef.current || readonly) return;
+    if (!ctxRef.current || viewMode) return;
     const { offsetX, offsetY } = e.nativeEvent;
     ctxRef.current.beginPath();
     ctxRef.current.moveTo(offsetX, offsetY);
@@ -130,7 +130,7 @@ const DrawingComponent = ({
   };
 
   const draw = (e: MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing || !ctxRef.current || readonly) return;
+    if (!isDrawing || !ctxRef.current || viewMode) return;
 
     const { offsetX, offsetY } = e.nativeEvent;
     ctxRef.current.lineTo(offsetX, offsetY);
@@ -139,7 +139,7 @@ const DrawingComponent = ({
   };
 
   const stopDrawing = () => {
-    if (readonly) return;
+    if (viewMode) return;
     if (isDrawing) {
       ctxRef.current?.closePath();
       dispatch({ type: "STOP_DRAWING" });
@@ -149,7 +149,7 @@ const DrawingComponent = ({
   };
 
   const saveHistory = () => {
-    if (readonly) return;
+    if (viewMode) return;
     if (canvasRef.current) {
       dispatch({
         type: "SAVE_HISTORY",
@@ -160,7 +160,7 @@ const DrawingComponent = ({
 
 
   const undo = () => {
-    if (readonly) return;
+    if (viewMode) return;
     dispatch({ type: "UNDO" });
     if (ctxRef.current && canvasRef.current && history.length > 1) {
       const previousState = history[history.length - 2];
@@ -180,7 +180,7 @@ const DrawingComponent = ({
   useHotkeys('u', undo)
 
   const clear = () => {
-    if (readonly) return;
+    if (viewMode) return;
     if (ctxRef.current && canvasRef.current) {
       ctxRef.current.clearRect(
         0,
@@ -194,7 +194,7 @@ const DrawingComponent = ({
   useHotkeys('c', clear)
 
   const setMode = (m: Mode) => {
-    if (readonly) return;
+    if (viewMode) return;
     dispatch({
       type: "SET_MODE",
       payload: m,
@@ -205,7 +205,7 @@ const DrawingComponent = ({
   useHotkeys('f', () => setMode('fill'))
 
   const handleCanvasClick = (e: MouseEvent<HTMLCanvasElement>) => {
-    if (readonly) return;
+    if (viewMode) return;
     if (mode === "fill" && canvasRef.current && ctxRef.current) {
       const { offsetX, offsetY } = e.nativeEvent;
       const imageData = ctxRef.current.getImageData(
@@ -222,7 +222,7 @@ const DrawingComponent = ({
   };
 
   const setLineWidth = (value: number) => {
-    if (readonly) return;
+    if (viewMode) return;
     dispatch({
       type: "SET_THICKNESS",
       payload: value,
@@ -230,7 +230,7 @@ const DrawingComponent = ({
   };
 
   const setColor = (value: string) => {
-    if (readonly) return;
+    if (viewMode) return;
     dispatch({
       type: "SET_COLOR",
       payload: value,
@@ -239,9 +239,9 @@ const DrawingComponent = ({
 
   return (
     <div>
-      {!readonly &&
+      {!viewMode &&
         renderToolbar({
-          readonly,
+          viewMode,
           setLineWidth,
           thickness: thickness,
           setColor,
