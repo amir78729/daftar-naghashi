@@ -3,7 +3,7 @@ export type RGBA = [number, number, number, number];
 export type Mode = "pen" | "fill";
 
 export type ToolbarProps = {
-  readonly: boolean;
+  viewMode: boolean;
   setLineWidth: (width: number) => void;
   thickness: number;
   setColor: (color: string) => void;
