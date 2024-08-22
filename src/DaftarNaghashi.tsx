@@ -183,6 +183,7 @@ const DrawingComponent = ({
         ctxRef.current!.drawImage(img, 0, 0);
       };
     }
+    onDrawing?.(canvasRef.current);
   };
   useHotkeys("u", undo);
 
@@ -196,6 +197,7 @@ const DrawingComponent = ({
         canvasRef.current.height,
       );
       dispatch({ type: "CLEAR_CANVAS" });
+      onDrawing?.(canvasRef.current);
     }
   };
   useHotkeys("c", clear);
@@ -245,19 +247,7 @@ const DrawingComponent = ({
   };
 
   return (
-    <div>
-      {!viewMode &&
-        renderToolbar({
-          viewMode,
-          setLineWidth,
-          thickness: thickness,
-          setColor,
-          color,
-          undo,
-          clear,
-          setMode,
-          mode,
-        })}
+    <div key={value}>
       <canvas
         ref={canvasRef}
         onMouseDown={mode === "pen" ? startDrawing : undefined}
@@ -267,9 +257,21 @@ const DrawingComponent = ({
         onClick={mode === "fill" ? handleCanvasClick : undefined}
         style={{
           border: "1px solid black",
-          cursor: mode === "pen" ? "crosshair" : "pointer",
+          cursor: viewMode ? 'not-allowed' :  (mode === "pen" ? "crosshair" : "pointer"),
         }}
       />
+      {!viewMode &&
+          renderToolbar({
+            viewMode,
+            setLineWidth,
+            thickness: thickness,
+            setColor,
+            color,
+            undo,
+            clear,
+            setMode,
+            mode,
+          })}
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import DaftarNaghashiComponent from ".";
+import {useState} from "react";
+import DaftarNaghashi from "./DaftarNaghashi";
 
 const meta = {
   title: "DaftarNaghashi",
@@ -139,3 +141,21 @@ CustomToolbar.args = {
     );
   },
 };
+
+export const PlayingTemplate = () => {
+  const [drawing, setDrawing] = useState<string>();
+  return (
+      <div style={{ display: "flex", gap: 50 }}>
+        <div>
+          <h3>👀 WATCHER</h3>
+          <DaftarNaghashi key={drawing} height={200} width={200} viewMode value={drawing} />
+        </div>
+        <div>
+          <h3>✍️ DRAWER</h3>
+          <DaftarNaghashi height={200} width={200} onDrawing={(c) => setDrawing(c?.toDataURL())} />
+        </div>
+      </div>
+  )
+};
+
+export const Multiplayer = PlayingTemplate.bind({});
