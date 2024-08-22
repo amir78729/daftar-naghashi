@@ -228,6 +228,7 @@ const DrawingComponent = ({
       ctxRef.current.putImageData(imageData, 0, 0);
       saveHistory();
     }
+    onDrawing?.(canvasRef.current);
   };
 
   const setLineWidth = (value: number) => {
