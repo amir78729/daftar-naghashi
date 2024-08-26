@@ -1,9 +1,22 @@
 {
   "name": "daftar-naghashi",
-  "author": {
-    "name": "Amirhossein Alibakhshi",
+  "description": "A React component for drawing pictures.",
+  "contributors": [
+    {
+      "name": "Amirhossein Alibakhshi",
+      "email": "amirhosseinalibakhshi@gmail.com"
+    },
+    {
+      "name": "Maryam Alikarami",
+      "email": "maryam.alkrm@gmail.com"
+    }
+  ],
+  "homepage": "https://amir78729.github.io/daftar-naghashi/",
+  "bugs": {
+    "url": "https://github.com/amir78729/daftar-naghashi/issues",
     "email": "amirhosseinalibakhshi@gmail.com"
   },
+  "repository": "github:amir78729/daftar-naghashi",
   "keywords": [
     "paint",
     "react",
@@ -22,8 +35,6 @@
     "storybook": "storybook dev -p 6006"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
     "react-hotkeys-hook": "^4.5.0"
   },
   "peerDependencies": {
