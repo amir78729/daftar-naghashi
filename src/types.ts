@@ -4,7 +4,7 @@ export type Mode = "pen" | "fill";
 
 export type ToolbarProps = {
   viewMode: boolean;
-  setLineWidth: (width: number) => void;
+  setThickness: (width: number) => void;
   thickness: number;
   setColor: (color: string) => void;
   color: string;

@@ -50,7 +50,7 @@ CustomToolbar.args = {
   },
   onStopDrawing: () => console.log("onStopDrawing"),
   renderToolbar: ({
-    setLineWidth,
+    setThickness,
     thickness,
     setColor,
     color,
@@ -130,7 +130,7 @@ CustomToolbar.args = {
             {thicknesses.map((t) => (
               <button
                 style={{ height: t, width: t }}
-                onClick={() => setLineWidth(t)}
+                onClick={() => setThickness(t)}
               >
                 {t === thickness ? "✅" : ""}
               </button>

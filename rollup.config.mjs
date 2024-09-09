@@ -18,6 +18,7 @@ export default [
         format: "esm",
       },
     ],
+    external: ['react', 'react-dom'],
     plugins: [
       resolve(),
       commonjs(),
@@ -27,6 +28,7 @@ export default [
   {
     input: "dist/index.d.ts",
     output: [{ file: "dist/index.d.ts", format: "esm" }],
+    external: ['react', 'react-dom'],
     plugins: [dts()],
   },
 ];

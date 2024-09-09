@@ -1,4 +1,4 @@
-import React, { MouseEvent, useEffect, useReducer, useRef } from "react";
+import React, { MouseEvent, useEffect, useReducer, useRef, TouchEvent } from "react";
 import { floodFill, getPixelColor, hexToRgba } from "./utils.ts";
 import { Mode, ToolbarProps } from "./types.ts";
 import drawingReducer from "./reducer.ts";
@@ -16,7 +16,7 @@ type Props = {
 };
 
 const renderDefaultToolbar = ({
-  setLineWidth,
+  setThickness,
   thickness,
   setColor,
   color,
@@ -43,7 +43,7 @@ const renderDefaultToolbar = ({
         value={thickness}
         min="1"
         max="100"
-        onChange={(e) => setLineWidth(parseInt(e.target.value, 10))}
+        onChange={(e) => setThickness(parseInt(e.target.value, 10))}
       />
     </label>
     <button title="shortcut: u" disabled={viewMode} onClick={undo}>
@@ -82,16 +82,15 @@ const DrawingComponent = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
-  // Initialize reducer state and dispatch function
   const [{ isDrawing, color, thickness, history, mode }, dispatch] = useReducer(
-    drawingReducer,
-    {
-      isDrawing: false,
-      color: "#000000",
-      thickness: 5,
-      history: [],
-      mode: "pen",
-    },
+      drawingReducer,
+      {
+        isDrawing: false,
+        color: "#000000",
+        thickness: 5,
+        history: [],
+        mode: "pen",
+      }
   );
 
   const initCanvas = () => {
@@ -128,27 +127,53 @@ const DrawingComponent = ({
     }
   }, [color, thickness]);
 
-  const startDrawing = (e: MouseEvent<HTMLCanvasElement>) => {
+  const getTouchPos = (e: TouchEvent<HTMLCanvasElement>) => {
+    const rect = canvasRef.current!.getBoundingClientRect();
+    const touch = e.touches[0];
+    return {
+      offsetX: touch.clientX - rect.left,
+      offsetY: touch.clientY - rect.top,
+    };
+  };
+
+  const startDrawing = (e: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
     if (!ctxRef.current || viewMode) return;
-    const { offsetX, offsetY } = e.nativeEvent;
+
+    if (e.type === "touchstart") {
+      e.preventDefault();
+    }
+
+    const { offsetX, offsetY } =
+        e.type === "mousedown" ? (e as MouseEvent).nativeEvent : getTouchPos(e as TouchEvent<HTMLCanvasElement>);
+
     ctxRef.current.beginPath();
     ctxRef.current.moveTo(offsetX, offsetY);
     dispatch({ type: "START_DRAWING" });
     onStartDrawing?.(canvasRef.current);
   };
 
-  const draw = (e: MouseEvent<HTMLCanvasElement>) => {
+  const draw = (e: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
     if (!isDrawing || !ctxRef.current || viewMode) return;
 
-    const { offsetX, offsetY } = e.nativeEvent;
+    if (e.type === "touchmove") {
+      e.preventDefault();
+    }
+
+    const { offsetX, offsetY } =
+        e.type === "mousemove" ? (e as MouseEvent).nativeEvent : getTouchPos(e as TouchEvent<HTMLCanvasElement>);
+
     ctxRef.current.lineTo(offsetX, offsetY);
     ctxRef.current.stroke();
     onDrawing?.(canvasRef.current);
   };
 
-  const stopDrawing = () => {
+  const stopDrawing = (e: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
     if (viewMode) return;
+
     if (isDrawing) {
+      if (e.type === "touchend") {
+        e.preventDefault();
+      }
       ctxRef.current?.closePath();
       dispatch({ type: "STOP_DRAWING" });
       saveHistory();
@@ -175,10 +200,10 @@ const DrawingComponent = ({
       img.src = previousState;
       img.onload = () => {
         ctxRef.current!.clearRect(
-          0,
-          0,
-          canvasRef.current!.width,
-          canvasRef.current!.height,
+            0,
+            0,
+            canvasRef.current!.width,
+            canvasRef.current!.height
         );
         ctxRef.current!.drawImage(img, 0, 0);
       };
@@ -191,10 +216,10 @@ const DrawingComponent = ({
     if (viewMode) return;
     if (ctxRef.current && canvasRef.current) {
       ctxRef.current.clearRect(
-        0,
-        0,
-        canvasRef.current.width,
-        canvasRef.current.height,
+          0,
+          0,
+          canvasRef.current.width,
+          canvasRef.current.height
       );
       dispatch({ type: "CLEAR_CANVAS" });
       onDrawing?.(canvasRef.current);
@@ -213,15 +238,16 @@ const DrawingComponent = ({
   useHotkeys("p", () => setMode("pen"));
   useHotkeys("f", () => setMode("fill"));
 
-  const handleCanvasClick = (e: MouseEvent<HTMLCanvasElement>) => {
+  const handleCanvasClick = (e: MouseEvent<HTMLCanvasElement> | TouchEvent<HTMLCanvasElement>) => {
     if (viewMode) return;
     if (mode === "fill" && canvasRef.current && ctxRef.current) {
-      const { offsetX, offsetY } = e.nativeEvent;
+      const { offsetX, offsetY } =
+        e.type === "click" ? (e as MouseEvent).nativeEvent : getTouchPos(e as TouchEvent<HTMLCanvasElement>);
       const imageData = ctxRef.current.getImageData(
         0,
         0,
         canvasRef.current.width,
-        canvasRef.current.height,
+        canvasRef.current.height
       );
       const targetColor = getPixelColor(imageData, offsetX, offsetY);
       floodFill(imageData, offsetX, offsetY, targetColor, hexToRgba(color));
@@ -231,7 +257,7 @@ const DrawingComponent = ({
     onDrawing?.(canvasRef.current);
   };
 
-  const setLineWidth = (value: number) => {
+  const setThickness = (value: number) => {
     if (viewMode) return;
     dispatch({
       type: "SET_THICKNESS",
@@ -255,24 +281,29 @@ const DrawingComponent = ({
         onMouseMove={mode === "pen" ? draw : undefined}
         onMouseUp={mode === "pen" ? stopDrawing : undefined}
         onMouseLeave={mode === "pen" ? stopDrawing : undefined}
+        onTouchStart={mode === "pen" ? startDrawing : undefined}
+        onTouchMove={mode === "pen" ? draw : undefined}
+        onTouchEnd={mode === "pen" ? stopDrawing : handleCanvasClick}
         onClick={mode === "fill" ? handleCanvasClick : undefined}
         style={{
           border: "1px solid black",
-          cursor: viewMode ? 'not-allowed' :  (mode === "pen" ? "crosshair" : "pointer"),
+          cursor: viewMode ? 'not-allowed' : (mode === "pen" ? "crosshair" : "pointer"),
+          outline: 'none',
+          WebkitTapHighlightColor: 'transparent',
         }}
       />
       {!viewMode &&
-          renderToolbar({
-            viewMode,
-            setLineWidth,
-            thickness: thickness,
-            setColor,
-            color,
-            undo,
-            clear,
-            setMode,
-            mode,
-          })}
+        renderToolbar({
+          viewMode,
+          setThickness,
+          thickness: thickness,
+          setColor,
+          color,
+          undo,
+          clear,
+          setMode,
+          mode,
+        })}
     </div>
   );
 };
